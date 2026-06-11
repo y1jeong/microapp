@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { detectScale, nearestElevation, parseDxf } from './dxf';
+import { type BoundaryCandidate, extractCandidates, parseDxf } from './dxf';
 import {
   computeWgl,
   makeParcel,
@@ -9,8 +9,15 @@ import {
   vertexLabel,
   type WglResult,
 } from './geometry';
+import ImportDialog, { type ImportSelection } from './ImportDialog';
 import PlanView from './PlanView';
 import SectionView from './SectionView';
+
+interface ImportState {
+  fileName: string;
+  scale: number;
+  candidates: BoundaryCandidate[];
+}
 
 // sample mirroring the 부천 심곡동 343-12,13 drawing: one planning site,
 // a road frontage, and two adjacent sites, each averaged separately
@@ -74,6 +81,7 @@ export default function WglApp() {
   const [activeId, setActiveId] = useState<string>(() => parcels[0]?.id ?? '');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [importNote, setImportNote] = useState<string | null>(null);
+  const [importState, setImportState] = useState<ImportState | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const active = parcels.find((p) => p.id === activeId) ?? parcels[0];
@@ -138,41 +146,52 @@ export default function WglApp() {
   const importDxf = async (file: File) => {
     try {
       const data = parseDxf(await file.text());
-      const scale = detectScale(data.polylines);
-      const boundaries = data.polylines
-        .filter((p) => (p.closed ? p.points.length >= 3 : p.points.length >= 2))
-        .sort((a, b) => Number(b.closed) - Number(a.closed))
-        .slice(0, 8);
-      if (boundaries.length === 0) {
-        setImportNote(`${file.name}: no polylines found (LWPOLYLINE/POLYLINE supported)`);
+      const { scale, candidates } = extractCandidates(data);
+      if (candidates.length === 0) {
+        setImportNote(
+          `${file.name}: no usable boundaries found (LWPOLYLINE, POLYLINE, and chained LINE work supported)`,
+        );
         return;
       }
-      let matched = 0;
-      const imported = boundaries.map((b, i) => {
-        const vertices = b.points.map((pt) => {
-          const x = Math.round(pt.x * scale * 100) / 100;
-          const y = Math.round(pt.y * scale * 100) / 100;
-          const el = nearestElevation(x, y, data.texts, scale);
-          if (el !== null) matched++;
-          return makeVertex(x, y, el ?? 0);
-        });
-        const name = b.layer || `DXF ${i + 1}`;
-        return makeParcel(name, b.closed ? 'site' : 'road', vertices, b.closed);
-      });
-      setParcels(imported);
-      setActiveId(imported[0].id);
-      setSelectedId(null);
-      setImportNote(
-        `${file.name}: ${imported.length} boundar${imported.length === 1 ? 'y' : 'ies'} imported` +
-          `${scale !== 1 ? ' (mm→m)' : ''}, ${matched} EL labels matched — fill in the rest below`,
-      );
+      setImportState({ fileName: file.name, scale, candidates });
     } catch (err) {
       setImportNote(`${file.name}: import failed (${err instanceof Error ? err.message : err})`);
     }
   };
 
+  const confirmImport = (selections: ImportSelection[], keepExisting: boolean) => {
+    let matched = 0;
+    let total = 0;
+    const imported = selections.map(({ candidate, kind }, i) => {
+      const vertices = candidate.points.map((p) => {
+        total++;
+        if (p.el !== null) matched++;
+        return makeVertex(p.x, p.y, p.el ?? 0);
+      });
+      const name = candidate.layer || `DXF ${i + 1}`;
+      return makeParcel(name, kind, vertices, kind !== 'road');
+    });
+    setParcels((ps) => (keepExisting ? [...ps, ...imported] : imported));
+    setActiveId(imported[0].id);
+    setSelectedId(null);
+    setImportState(null);
+    setImportNote(
+      `${imported.length} parcel${imported.length === 1 ? '' : 's'} imported, ` +
+        `${matched}/${total} EL labels matched — fill in the rest in the vertex table`,
+    );
+  };
+
   return (
     <div className="overflow-hidden rounded-2xl border border-line bg-card">
+      {importState && (
+        <ImportDialog
+          fileName={importState.fileName}
+          candidates={importState.candidates}
+          scale={importState.scale}
+          onConfirm={confirmImport}
+          onCancel={() => setImportState(null)}
+        />
+      )}
       <header className="flex flex-wrap items-baseline justify-between gap-3 px-6 pt-5 pb-1.5">
         <h1 className="m-0 flex flex-wrap items-baseline gap-4">
           <span className="text-[19px] font-medium tracking-[0.32em] text-[#d4d4d4]">

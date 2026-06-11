@@ -24,8 +24,11 @@ WGL = h_min + (area between ground profile and h_min) / perimeter
 - **Section view** — the unfolded profile with a dimension band (numbered
   points + segment lengths, like the survey drawing), EL labels, and the
   G.L±0 line over the weighted-area hatch.
-- **DXF import** — reads LWPOLYLINE/POLYLINE boundaries (mm→m auto-detected)
-  and picks up nearby `EL+xx.xx` TEXT labels as vertex elevations.
+- **DXF import** — built for full 배치도 site plans: parses LWPOLYLINE/POLYLINE
+  boundaries and chains loose LINE work into loops, filters out annotation
+  noise, then shows a picker (with previews, layers, and sizes) to choose
+  which boundaries are 대지/인접대지/도로. Units mm→m auto-detected; nearby
+  `EL+xx.xx` TEXT labels become vertex elevations.
 - **Vertex table** — edit X/Y/EL numerically, insert or delete corners.
 
 ## Development
