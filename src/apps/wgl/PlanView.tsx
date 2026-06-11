@@ -1,10 +1,10 @@
 import { useRef } from 'react';
 import {
-  Vertex,
   contourLevels,
   contourSegments,
   edgeLength,
   polygonArea,
+  type Vertex,
   vertexLabel,
 } from './geometry';
 
@@ -40,8 +40,8 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
   const py = (y: number) => oy + (maxY - y) * scale; // north up
 
   const toPlan = (clientX: number, clientY: number) => {
-    const svg = svgRef.current!;
-    const ctm = svg.getScreenCTM();
+    const svg = svgRef.current;
+    const ctm = svg?.getScreenCTM();
     if (!ctm) return null;
     const pt = new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse());
     return {
@@ -70,15 +70,20 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
     <svg
       ref={svgRef}
       viewBox={`0 0 ${W} ${H}`}
-      className="view-svg"
+      className="block h-auto w-full touch-none select-none"
       onPointerMove={handlePointerMove}
-      onPointerUp={() => (dragId.current = null)}
-      onPointerCancel={() => (dragId.current = null)}
+      onPointerUp={() => {
+        dragId.current = null;
+      }}
+      onPointerCancel={() => {
+        dragId.current = null;
+      }}
     >
+      <title>Plan view of the building footprint with ground elevations</title>
       <polygon points={ring} fill="rgba(255,255,255,0.04)" stroke="#cfcfcf" strokeWidth={1.5} />
 
-      {contours.map((s, i) => (
-        <g key={`c${i}`}>
+      {contours.map((s) => (
+        <g key={`${s.level}:${s.x1.toFixed(3)},${s.y1.toFixed(3)}`}>
           <line
             x1={px(s.x1)}
             y1={py(s.y1)}
@@ -88,14 +93,14 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
             strokeWidth={1.2}
             strokeDasharray="6 5"
           />
-          <text x={px(s.x1) - 6} y={py(s.y1) - 4} className="lbl-contour" textAnchor="end">
+          <text x={px(s.x1) - 6} y={py(s.y1) - 4} fill="#9a6a3c" fontSize={12} textAnchor="end">
             {s.level.toFixed(1)}m
           </text>
         </g>
       ))}
-      {wglContours.map((s, i) => (
+      {wglContours.map((s) => (
         <line
-          key={`w${i}`}
+          key={`w${s.x1}${s.y1}`}
           x1={px(s.x1)}
           y1={py(s.y1)}
           x2={px(s.x2)}
@@ -111,13 +116,21 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
         const mx = px((v.x + b.x) / 2);
         const my = py((v.y + b.y) / 2);
         return (
-          <text key={`e${v.id}`} x={mx} y={my - 8} className="lbl-edge" textAnchor="middle">
+          <text key={`e${v.id}`} x={mx} y={my - 8} fill="#8a8a8a" fontSize={14} textAnchor="middle">
             {edgeLength(v, b).toFixed(2)}
           </text>
         );
       })}
 
-      <text x={px(cx)} y={py(cy)} className="lbl-area" textAnchor="middle">
+      <text
+        x={px(cx)}
+        y={py(cy)}
+        fill="#e0e0e0"
+        fontSize={26}
+        fontWeight={600}
+        letterSpacing="0.04em"
+        textAnchor="middle"
+      >
         {area.toFixed(2)} m²
       </text>
 
@@ -131,7 +144,7 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
         return (
           <g
             key={v.id}
-            className="vertex"
+            className="cursor-grab"
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture?.(e.pointerId);
               dragId.current = v.id;
@@ -146,10 +159,10 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
               stroke={v.id === selectedId ? '#d98e3f' : 'none'}
               strokeWidth={3}
             />
-            <text x={lx} y={ly - 8} className="lbl-vertex" textAnchor="middle">
+            <text x={lx} y={ly - 8} fill="#fff" fontSize={19} fontWeight={700} textAnchor="middle">
               {vertexLabel(i)}
             </text>
-            <text x={lx} y={ly + 10} className="lbl-fh" textAnchor="middle">
+            <text x={lx} y={ly + 10} fill="#cfcfcf" fontSize={15} textAnchor="middle">
               FH:{v.fh.toFixed(2)}
             </text>
           </g>

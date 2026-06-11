@@ -27,12 +27,15 @@ WGL = h_min + (area between ground profile and h_min) / perimeter
 npm install
 npm run dev      # local dev server
 npm test         # geometry unit tests (vitest)
+npm run lint     # biome lint + format check
+npm run format   # biome autofix
 npm run build    # type-check + production build to dist/
 ```
 
-Stack: Vite + React + TypeScript, plain SVG rendering, no UI framework. The
-build is fully static (`base: './'`), so `dist/` can be hosted anywhere —
-GitHub Pages, Vercel, Netlify, or a plain file server.
+Stack: React 19 · Vite 8 (Rolldown) · TypeScript 6 · Tailwind CSS v4
+(CSS-first `@theme` config) · Vitest 4 · Biome. Views are plain SVG — no
+chart library. The build is fully static (`base: './'`), so `dist/` can be
+hosted anywhere — GitHub Pages, Vercel, Netlify, or a plain file server.
 
 ## Adding a micro app
 

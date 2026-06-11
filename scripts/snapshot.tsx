@@ -3,11 +3,11 @@
  * components with the sample data into a standalone SVG (used when no
  * browser is available in the environment).
  */
+import { writeFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { writeFileSync, readFileSync } from 'node:fs';
+import { computeWgl, makeVertex } from '../src/apps/wgl/geometry';
 import PlanView from '../src/apps/wgl/PlanView';
 import SectionView from '../src/apps/wgl/SectionView';
-import { computeWgl, makeVertex } from '../src/apps/wgl/geometry';
 
 const vertices = [
   makeVertex(0.0, 4.8, 9.4),
@@ -20,21 +20,28 @@ const vertices = [
 const result = computeWgl(vertices);
 
 const embed = (markup: string, x: number, y: number, h: number) =>
-  markup
-    .replace('<svg', `<svg x="${x}" y="${y}" width="640" height="${h}"`)
-    .replace('class="view-svg"', '');
+  markup.replace('<svg', `<svg x="${x}" y="${y}" width="640" height="${h}"`);
 
 const plan = embed(
   renderToStaticMarkup(
-    <PlanView vertices={vertices} wgl={result.wgl} selectedId={null} onSelect={() => {}} onMove={() => {}} />,
+    <PlanView
+      vertices={vertices}
+      wgl={result.wgl}
+      selectedId={null}
+      onSelect={() => {}}
+      onMove={() => {}}
+    />,
   ),
   20,
   120,
   420,
 );
-const section = embed(renderToStaticMarkup(<SectionView vertices={vertices} result={result} />), 20, 590, 280);
-
-const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
+const section = embed(
+  renderToStaticMarkup(<SectionView vertices={vertices} result={result} />),
+  20,
+  590,
+  280,
+);
 
 const stats = `Section Area: ${result.sectionArea.toFixed(2)} | Perimeter: ${result.perimeter.toFixed(
   2,
@@ -43,7 +50,6 @@ const stats = `Section Area: ${result.sectionArea.toFixed(2)} | Perimeter: ${res
 )}) = WGL ${result.wgl.toFixed(2)} m`;
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="680" height="940" viewBox="0 0 680 940" font-family="DejaVu Sans Mono, monospace">
-<style>${css}</style>
 <rect width="680" height="940" rx="18" fill="#141414" stroke="#2e2e2e"/>
 <text x="34" y="56" fill="#d4d4d4" font-size="20" letter-spacing="6">WEIGHTED GROUND LEVEL</text>
 <text x="34" y="100" fill="#8a8a8a" font-size="13" letter-spacing="3">PLAN VIEW</text>

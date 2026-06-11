@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
+import { computeWgl, makeVertex, type Vertex, vertexLabel } from './geometry';
 import PlanView from './PlanView';
 import SectionView from './SectionView';
-import { Vertex, computeWgl, makeVertex, vertexLabel } from './geometry';
 
 const sampleVertices = (): Vertex[] => [
   makeVertex(0.0, 4.8, 9.4),
@@ -11,6 +11,11 @@ const sampleVertices = (): Vertex[] => [
   makeVertex(6.6, 3.9, 1.12),
   makeVertex(5.3, 4.9, 9.3),
 ];
+
+const inputCls =
+  'w-full max-w-24 rounded-md border border-line bg-field px-2 py-1 font-mono text-ink focus:border-accent-dim focus:outline-none';
+const buttonCls =
+  'ml-1 cursor-pointer rounded-md border border-line bg-field px-2.5 py-1 font-mono text-ink hover:enabled:border-accent-dim disabled:cursor-default disabled:opacity-35';
 
 export default function WglApp() {
   const [vertices, setVertices] = useState<Vertex[]>(sampleVertices);
@@ -41,16 +46,20 @@ export default function WglApp() {
   };
 
   return (
-    <div className="card">
-      <header className="card-header">
-        <h1>
-          <span className="title-en">WEIGHTED GROUND LEVEL</span>
-          <span className="title-ko">가중평균 지표면</span>
+    <div className="overflow-hidden rounded-2xl border border-line bg-card">
+      <header className="px-6 pt-5 pb-1.5">
+        <h1 className="m-0 flex flex-wrap items-baseline gap-4">
+          <span className="text-[19px] font-medium tracking-[0.32em] text-[#d4d4d4]">
+            WEIGHTED GROUND LEVEL
+          </span>
+          <span className="text-sm font-normal text-muted">가중평균 지표면</span>
         </h1>
       </header>
 
-      <section className="panel">
-        <h2 className="panel-title">PLAN VIEW</h2>
+      <section className="px-4 pt-3.5 pb-2.5">
+        <h2 className="mb-1 ml-2 text-[13px] font-medium tracking-[0.22em] text-muted">
+          PLAN VIEW
+        </h2>
         <PlanView
           vertices={vertices}
           wgl={result.wgl}
@@ -60,68 +69,89 @@ export default function WglApp() {
         />
       </section>
 
-      <section className="panel panel-divided">
-        <h2 className="panel-title">SECTION VIEW</h2>
+      <section className="border-t border-line px-4 pt-3.5 pb-2.5">
+        <h2 className="mb-1 ml-2 text-[13px] font-medium tracking-[0.22em] text-muted">
+          SECTION VIEW
+        </h2>
         <SectionView vertices={vertices} result={result} />
-        <p className="stats">
-          Section Area: {result.sectionArea.toFixed(2)} | Perimeter: {result.perimeter.toFixed(2)} | h_min:{' '}
-          {result.hMin.toFixed(2)} + ({result.sectionArea.toFixed(2)} / {result.perimeter.toFixed(2)}) ={' '}
-          <strong className="wgl-value">WGL {result.wgl.toFixed(2)} m</strong>
+        <p className="mx-2 my-2 text-[12.5px] leading-relaxed text-muted">
+          Section Area: {result.sectionArea.toFixed(2)} | Perimeter: {result.perimeter.toFixed(2)} |
+          h_min: {result.hMin.toFixed(2)} + ({result.sectionArea.toFixed(2)} /{' '}
+          {result.perimeter.toFixed(2)}) ={' '}
+          <strong className="text-accent">WGL {result.wgl.toFixed(2)} m</strong>
         </p>
       </section>
 
-      <section className="panel panel-divided">
-        <h2 className="panel-title">VERTICES 꼭짓점</h2>
-        <table className="vertex-table">
+      <section className="border-t border-line px-4 pt-3.5 pb-2.5">
+        <h2 className="mb-1 ml-2 text-[13px] font-medium tracking-[0.22em] text-muted">
+          VERTICES 꼭짓점
+        </h2>
+        <table className="w-full border-collapse text-[13px]">
           <thead>
             <tr>
-              <th></th>
-              <th>X (m)</th>
-              <th>Y (m)</th>
-              <th>FH (m)</th>
-              <th></th>
+              <th>
+                <span className="sr-only">Vertex</span>
+              </th>
+              {['X (m)', 'Y (m)', 'FH (m)'].map((h) => (
+                <th key={h} className="px-1.5 py-1 text-left text-[11.5px] font-normal text-muted">
+                  {h}
+                </th>
+              ))}
+              <th>
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {vertices.map((v, i) => (
               <tr
                 key={v.id}
-                className={v.id === selectedId ? 'selected' : ''}
+                className={v.id === selectedId ? 'bg-accent/10' : ''}
                 onClick={() => setSelectedId(v.id)}
               >
-                <td className="vtx-label">{vertexLabel(i)}</td>
-                <td>
+                <td className="w-7 px-1.5 py-0.5 font-bold">{vertexLabel(i)}</td>
+                <td className="px-1.5 py-0.5">
                   <input
                     type="number"
                     step={0.1}
                     value={v.x}
                     onChange={(e) => update(v.id, { x: Number(e.target.value) })}
+                    className={inputCls}
                   />
                 </td>
-                <td>
+                <td className="px-1.5 py-0.5">
                   <input
                     type="number"
                     step={0.1}
                     value={v.y}
                     onChange={(e) => update(v.id, { y: Number(e.target.value) })}
+                    className={inputCls}
                   />
                 </td>
-                <td>
+                <td className="px-1.5 py-0.5">
                   <input
                     type="number"
                     step={0.01}
                     value={v.fh}
                     onChange={(e) => update(v.id, { fh: Number(e.target.value) })}
+                    className={inputCls}
                   />
                 </td>
-                <td className="vtx-actions">
-                  <button title="Insert vertex after" onClick={() => insertAfter(v.id)}>
+                <td className="whitespace-nowrap px-1.5 py-0.5 text-right">
+                  <button
+                    type="button"
+                    title="Insert vertex after"
+                    onClick={() => insertAfter(v.id)}
+                    className={buttonCls}
+                  >
                     +
                   </button>
                   <button
+                    type="button"
                     title="Delete vertex"
                     disabled={vertices.length <= 3}
                     onClick={() => remove(v.id)}
+                    className={buttonCls}
                   >
                     ×
                   </button>
@@ -130,10 +160,12 @@ export default function WglApp() {
             ))}
           </tbody>
         </table>
-        <div className="toolbar">
-          <button onClick={() => setVertices(sampleVertices())}>Reset sample</button>
+        <div className="mx-1.5 my-2.5">
+          <button type="button" onClick={() => setVertices(sampleVertices())} className={buttonCls}>
+            Reset sample
+          </button>
         </div>
-        <p className="hint">
+        <p className="mx-2 mt-1 mb-2.5 text-[11.5px] leading-relaxed text-faint">
           Drag corners in the plan view, or edit coordinates and ground elevations (FH) here. WGL
           updates live: h_min + (section area ÷ perimeter).
         </p>
