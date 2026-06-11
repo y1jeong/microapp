@@ -3,14 +3,16 @@ import {
   contourLevels,
   contourSegments,
   edgeLength,
+  type Parcel,
   polygonArea,
-  type Vertex,
+  traceEdges,
   vertexLabel,
 } from './geometry';
 
 interface Props {
-  vertices: Vertex[];
-  wgl: number;
+  parcels: Parcel[];
+  activeId: string;
+  gl: number;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onMove: (id: string, x: number, y: number) => void;
@@ -20,12 +22,13 @@ const W = 640;
 const H = 420;
 const PAD = 70;
 
-export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }: Props) {
+export default function PlanView({ parcels, activeId, gl, selectedId, onSelect, onMove }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const dragId = useRef<string | null>(null);
 
-  const xs = vertices.map((v) => v.x);
-  const ys = vertices.map((v) => v.y);
+  const all = parcels.flatMap((p) => p.vertices);
+  const xs = all.map((v) => v.x);
+  const ys = all.map((v) => v.y);
   const minX = Math.min(...xs);
   const maxX = Math.max(...xs);
   const minY = Math.min(...ys);
@@ -39,9 +42,11 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
   const px = (x: number) => ox + (x - minX) * scale;
   const py = (y: number) => oy + (maxY - y) * scale; // north up
 
+  const active = parcels.find((p) => p.id === activeId) ?? parcels[0];
+  const vertices = active.vertices;
+
   const toPlan = (clientX: number, clientY: number) => {
-    const svg = svgRef.current;
-    const ctm = svg?.getScreenCTM();
+    const ctm = svgRef.current?.getScreenCTM();
     if (!ctm) return null;
     const pt = new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse());
     return {
@@ -56,15 +61,19 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
     if (p) onMove(dragId.current, Math.round(p.x * 100) / 100, Math.round(p.y * 100) / 100);
   };
 
-  const area = polygonArea(vertices);
-  const cx = vertices.reduce((s, v) => s + v.x, 0) / vertices.length;
-  const cy = vertices.reduce((s, v) => s + v.y, 0) / vertices.length;
+  const centroid = (p: Parcel) => ({
+    x: p.vertices.reduce((s, v) => s + v.x, 0) / p.vertices.length,
+    y: p.vertices.reduce((s, v) => s + v.y, 0) / p.vertices.length,
+  });
 
-  const levels = contourLevels(vertices);
-  const contours = levels.flatMap((l) => contourSegments(vertices, l));
-  const wglContours = contourSegments(vertices, wgl);
+  const area = polygonArea(vertices, active.closed);
+  const { x: cx, y: cy } = centroid(active);
 
-  const ring = vertices.map((v) => `${px(v.x)},${py(v.y)}`).join(' ');
+  const levels = active.closed ? contourLevels(vertices) : [];
+  const contours = levels.flatMap((l) => contourSegments(vertices, active.closed, l));
+  const glContours = active.closed ? contourSegments(vertices, active.closed, gl) : [];
+
+  const path = (p: Parcel) => p.vertices.map((v) => `${px(v.x)},${py(v.y)}`).join(' ');
 
   return (
     <svg
@@ -79,11 +88,56 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
         dragId.current = null;
       }}
     >
-      <title>Plan view of the building footprint with ground elevations</title>
-      <polygon points={ring} fill="rgba(255,255,255,0.04)" stroke="#cfcfcf" strokeWidth={1.5} />
+      <title>Plan view of parcels with surveyed ground elevations</title>
+
+      {parcels
+        .filter((p) => p.id !== active.id)
+        .map((p) => {
+          const c = centroid(p);
+          return (
+            <g key={p.id} opacity={0.45}>
+              {p.closed ? (
+                <polygon points={path(p)} fill="none" stroke="#555" strokeWidth={1} />
+              ) : (
+                <polyline
+                  points={path(p)}
+                  fill="none"
+                  stroke="#555"
+                  strokeWidth={1}
+                  strokeDasharray="3 4"
+                />
+              )}
+              {p.vertices.map((v) => (
+                <circle key={v.id} cx={px(v.x)} cy={py(v.y)} r={3.5} fill="#555" />
+              ))}
+              <text x={px(c.x)} y={py(c.y)} fill="#666" fontSize={12} textAnchor="middle">
+                {p.name}
+              </text>
+            </g>
+          );
+        })}
+
+      {active.closed ? (
+        <polygon
+          points={path(active)}
+          fill="rgba(255,255,255,0.04)"
+          stroke="#cfcfcf"
+          strokeWidth={1.5}
+        />
+      ) : (
+        <polyline
+          points={path(active)}
+          fill="none"
+          stroke="#cfcfcf"
+          strokeWidth={1.5}
+          strokeDasharray="8 4"
+        />
+      )}
 
       {contours.map((s) => (
-        <g key={`${s.level}:${s.x1.toFixed(3)},${s.y1.toFixed(3)}`}>
+        <g
+          key={`${s.level}:${s.x1.toFixed(3)},${s.y1.toFixed(3)},${s.x2.toFixed(3)},${s.y2.toFixed(3)}`}
+        >
           <line
             x1={px(s.x1)}
             y1={py(s.y1)}
@@ -94,13 +148,13 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
             strokeDasharray="6 5"
           />
           <text x={px(s.x1) - 6} y={py(s.y1) - 4} fill="#9a6a3c" fontSize={12} textAnchor="end">
-            {s.level.toFixed(1)}m
+            EL+{s.level.toFixed(1)}
           </text>
         </g>
       ))}
-      {wglContours.map((s) => (
+      {glContours.map((s) => (
         <line
-          key={`w${s.x1}${s.y1}`}
+          key={`g${s.x1.toFixed(3)},${s.y1.toFixed(3)}`}
           x1={px(s.x1)}
           y1={py(s.y1)}
           x2={px(s.x2)}
@@ -111,28 +165,32 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
         />
       ))}
 
-      {vertices.map((v, i) => {
-        const b = vertices[(i + 1) % vertices.length];
-        const mx = px((v.x + b.x) / 2);
-        const my = py((v.y + b.y) / 2);
-        return (
-          <text key={`e${v.id}`} x={mx} y={my - 8} fill="#8a8a8a" fontSize={14} textAnchor="middle">
-            {edgeLength(v, b).toFixed(2)}
-          </text>
-        );
-      })}
+      {traceEdges(vertices, active.closed).map(([a, b]) => (
+        <text
+          key={`e${a.id}`}
+          x={px((a.x + b.x) / 2)}
+          y={py((a.y + b.y) / 2) - 8}
+          fill="#8a8a8a"
+          fontSize={14}
+          textAnchor="middle"
+        >
+          {edgeLength(a, b).toFixed(2)}
+        </text>
+      ))}
 
-      <text
-        x={px(cx)}
-        y={py(cy)}
-        fill="#e0e0e0"
-        fontSize={26}
-        fontWeight={600}
-        letterSpacing="0.04em"
-        textAnchor="middle"
-      >
-        {area.toFixed(2)} m²
-      </text>
+      {active.closed && (
+        <text
+          x={px(cx)}
+          y={py(cy)}
+          fill="#e0e0e0"
+          fontSize={26}
+          fontWeight={600}
+          letterSpacing="0.04em"
+          textAnchor="middle"
+        >
+          {area.toFixed(2)} m²
+        </text>
+      )}
 
       {vertices.map((v, i) => {
         // push labels outward from the centroid so they sit outside the ring
@@ -163,7 +221,7 @@ export default function PlanView({ vertices, wgl, selectedId, onSelect, onMove }
               {vertexLabel(i)}
             </text>
             <text x={lx} y={ly + 10} fill="#cfcfcf" fontSize={15} textAnchor="middle">
-              FH:{v.fh.toFixed(2)}
+              EL+{v.el.toFixed(2)}
             </text>
           </g>
         );

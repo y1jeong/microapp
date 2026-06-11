@@ -15,11 +15,18 @@ perimeter. The tool unfolds the perimeter into a section and computes:
 WGL = h_min + (area between ground profile and h_min) / perimeter
 ```
 
-- **Plan view** — drag corners to reshape the footprint; edge lengths, plan
-  area, and elevation contours update live.
-- **Section view** — the unfolded perimeter profile with the WGL line and the
-  weighted-area hatch.
-- **Vertex table** — edit X/Y/FH numerically, insert or delete corners.
+- **Multiple parcels** — 계획대지, 인접대지, 도로 in one project, each with its
+  own weighted average (G.L±0 = 최저레벨 + 면적÷접하는 길이).
+- **도로 가중평균 수평면** — road frontages are open polylines averaged over
+  the contact length instead of a closed perimeter.
+- **Plan view** — drag corners to reshape the active parcel; other parcels stay
+  dimmed in context. Edge lengths, plan area, and EL contours update live.
+- **Section view** — the unfolded profile with a dimension band (numbered
+  points + segment lengths, like the survey drawing), EL labels, and the
+  G.L±0 line over the weighted-area hatch.
+- **DXF import** — reads LWPOLYLINE/POLYLINE boundaries (mm→m auto-detected)
+  and picks up nearby `EL+xx.xx` TEXT labels as vertex elevations.
+- **Vertex table** — edit X/Y/EL numerically, insert or delete corners.
 
 ## Development
 
