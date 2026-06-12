@@ -1,16 +1,17 @@
 /**
- * Northlight regulation (정북 일조사선) math, per 건축법 시행령 제86조.
+ * North-side daylight setback (정북 일조사선) math, per 건축법 시행령 제86조.
  *
- * World coordinates are metres with +Y pointing due north. A point is
- * buildable at height h if its due-north distance to the site boundary is
- * at least the required setback s(h):
+ * Coordinates are in meters with +Y pointing due north. A point is buildable
+ * at height h if its due-north distance to the site boundary is at least the
+ * required setback s(h):
  *
  *   h <= threshold : s = base setback (default 1.5 m)
- *   h >  threshold : s = max(base, h * ratio)   (default h × 1/2)
+ *   h >  threshold : s = max(base, h * ratio) (default h / 2)
  *
- * For a vertically-simple polygon the buildable footprint equals the region
- * between the lower boundary chain and the upper chain lowered by s, which
- * footprintAt() computes strip by strip.
+ * For a vertically-simple site polygon that region is exactly the area between
+ * the lower boundary chain and the upper boundary chain lowered by s, which
+ * footprintAt() computes strip by strip between consecutive vertex x's (the
+ * boundaries are linear inside each strip, so areas and crossings are exact).
  */
 
 export interface Pt {
@@ -18,23 +19,32 @@ export interface Pt {
   y: number;
 }
 
-export interface RuleParams {
-  floors: number;
-  floorH: number;
+export interface SetbackRule {
+  /** height up to which only the base setback applies, meters */
   threshold: number;
+  /** minimum setback from the north boundary, meters */
   base: number;
+  /** setback ratio above the threshold (s = h * ratio) */
   ratio: number;
 }
 
-export const DEFAULT_PARAMS: RuleParams = {
-  floors: 10,
-  floorH: 3,
-  threshold: 9,
-  base: 1.5,
-  ratio: 0.5,
-};
+export interface Footprint {
+  /** buildable region, possibly several disjoint components */
+  polys: Pt[][];
+  area: number;
+}
 
-export function polyArea(verts: Pt[]): number {
+export interface Floor extends Footprint {
+  level: number;
+  /** top of this floor above ground, meters */
+  topZ: number;
+}
+
+export function setbackAt(h: number, rule: SetbackRule): number {
+  return h <= rule.threshold ? rule.base : Math.max(rule.base, h * rule.ratio);
+}
+
+export function polygonArea(verts: Pt[]): number {
   let a = 0;
   for (let i = 0; i < verts.length; i++) {
     const p = verts[i];
@@ -44,10 +54,14 @@ export function polyArea(verts: Pt[]): number {
   return Math.abs(a) / 2;
 }
 
-/** min/max y of the polygon's cross-section on the vertical line at x. */
+export function edgeLength(a: Pt, b: Pt): number {
+  return Math.hypot(b.x - a.x, b.y - a.y);
+}
+
+/** min/max y of the polygon's cross-section on the vertical line at x */
 export function columnInterval(verts: Pt[], x: number): { lo: number; hi: number } | null {
-  let lo = Number.POSITIVE_INFINITY;
-  let hi = Number.NEGATIVE_INFINITY;
+  let lo = Infinity;
+  let hi = -Infinity;
   const n = verts.length;
   for (let i = 0; i < n; i++) {
     const a = verts[i];
@@ -66,12 +80,7 @@ export function columnInterval(verts: Pt[], x: number): { lo: number; hi: number
   return hi < lo ? null : { lo, hi };
 }
 
-export interface Footprint {
-  polys: Pt[][];
-  area: number;
-}
-
-/** Buildable footprint after applying a due-north setback of s metres. */
+/** buildable footprint after applying a due-north setback of s meters */
 export function footprintAt(verts: Pt[], s: number): Footprint {
   const xs = [...new Set(verts.map((v) => +v.x.toFixed(7)))].sort((a, b) => a - b);
   const polys: Pt[][] = [];
@@ -89,12 +98,17 @@ export function footprintAt(verts: Pt[], s: number): Footprint {
     const x0 = xs[i];
     const x1 = xs[i + 1];
     if (x1 - x0 < 1e-9) continue;
-    const c0 = columnInterval(verts, x0);
-    const c1 = columnInterval(verts, x1);
-    if (!c0 || !c1) {
+    // Sample at interior points: at the strip boundaries vertical edges (and
+    // vertices of adjacent strips) contaminate the column min/max. lo and hi
+    // are linear inside the strip, so two samples extrapolate exactly.
+    const cA = columnInterval(verts, x0 + (x1 - x0) * 0.25);
+    const cB = columnInterval(verts, x0 + (x1 - x0) * 0.75);
+    if (!cA || !cB) {
       flush();
       continue;
     }
+    const c0 = { lo: (3 * cA.lo - cB.lo) / 2, hi: (3 * cA.hi - cB.hi) / 2 };
+    const c1 = { lo: (3 * cB.lo - cA.lo) / 2, hi: (3 * cB.hi - cA.hi) / 2 };
     const lo = (x: number) => c0.lo + ((x - x0) / (x1 - x0)) * (c1.lo - c0.lo);
     const tp = (x: number) => c0.hi - s + ((x - x0) / (x1 - x0)) * (c1.hi - c0.hi);
     const g0 = tp(x0) - lo(x0);
@@ -128,8 +142,21 @@ export function footprintAt(verts: Pt[], s: number): Footprint {
   return { polys, area };
 }
 
-export function setbackFor(params: RuleParams, h: number): number {
-  return h <= params.threshold ? params.base : Math.max(params.base, h * params.ratio);
+/** floors that remain buildable under the slope plane, bottom up */
+export function computeFloors(
+  verts: Pt[],
+  rule: SetbackRule,
+  count: number,
+  floorH: number,
+): Floor[] {
+  const floors: Floor[] = [];
+  for (let i = 1; i <= count; i++) {
+    const topZ = i * floorH;
+    const fp = footprintAt(verts, setbackAt(topZ, rule));
+    if (fp.area < 1) break;
+    floors.push({ level: i, topZ, ...fp });
+  }
+  return floors;
 }
 
 export function distToSegment(p: Pt, a: Pt, b: Pt): number {
@@ -141,25 +168,35 @@ export function distToSegment(p: Pt, a: Pt, b: Pt): number {
 }
 
 export function distToBoundary(p: Pt, verts: Pt[]): number {
-  let d = Number.POSITIVE_INFINITY;
+  let d = Infinity;
   for (let i = 0; i < verts.length; i++) {
     d = Math.min(d, distToSegment(p, verts[i], verts[(i + 1) % verts.length]));
   }
   return d;
 }
 
-export interface Floor extends Footprint {
-  level: number;
-  topZ: number;
+/**
+ * Edges of a footprint outline that deviate from the site boundary, so stacked
+ * floors render as setback lines instead of one thick multicolored border.
+ */
+export function deviatingEdges(poly: Pt[], site: Pt[], tol = 0.08): [Pt, Pt][] {
+  const edges: [Pt, Pt][] = [];
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i];
+    const b = poly[(i + 1) % poly.length];
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    if (distToBoundary(mid, site) < tol && distToBoundary(a, site) < tol) continue;
+    edges.push([a, b]);
+  }
+  return edges;
 }
 
-export function computeFloors(verts: Pt[], params: RuleParams): Floor[] {
-  const floors: Floor[] = [];
-  for (let i = 1; i <= params.floors; i++) {
-    const topZ = i * params.floorH;
-    const fp = footprintAt(verts, setbackFor(params, topZ));
-    if (fp.area < 1) break; // floor no longer buildable under the slope plane
-    floors.push({ level: i, topZ, ...fp });
-  }
-  return floors;
+/** dimetric projection used by the floor-stack view (screen y grows up) */
+export function isoProject(x: number, y: number, z: number): Pt {
+  return { x: (x - y) * 0.866, y: (x + y) * 0.5 + z * 1.05 };
+}
+
+export function floorColor(level: number, count: number): string {
+  const hue = 215 - (count <= 1 ? 0 : ((level - 1) / (count - 1)) * 95);
+  return `hsl(${hue} 75% 62%)`;
 }

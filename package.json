@@ -19,12 +19,18 @@
   "build": {
     "appId": "dev.archmicroapps.desktop",
     "productName": "Arch Micro Apps",
-    "files": ["dist/**", "electron/**"],
+    "files": [
+      "dist/**",
+      "electron/**"
+    ],
     "directories": {
       "output": "release"
     },
     "win": {
-      "target": ["portable", "nsis"]
+      "target": [
+        "portable",
+        "nsis"
+      ]
     },
     "nsis": {
       "oneClick": true,
