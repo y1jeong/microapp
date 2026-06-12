@@ -52,6 +52,26 @@ floor by floor:
 - **Adjustable rule** — floor count and height, slope threshold (default 9 m;
   current law uses 10 m), base setback, and above-threshold ratio.
 
+### Parking Layout · 주차 배치 (`#/parking`)
+
+Auto-fits parking inside a site polygon per 주차장법 시행규칙 제3조·제6조. Stalls
+run perpendicular along each boundary edge, inner columns are double-loaded, and
+a circulation aisle threads between them — runs stop short of corners so cars are
+never trapped behind a perpendicular row.
+
+- **Plan view** — draggable site polygon (drag corners, double-click an edge to
+  add a point or a vertex to delete it) with live edge lengths. Stalls and the
+  aisle ring re-fit on every edit.
+- **Edge + inner + circulation** — perimeter stalls along each edge, double-loaded
+  inner rows, and the 6 m aisle (직각주차 차로) between them, each kept an
+  aisle-deep maneuvering zone in front of its access face.
+- **Exclusion blocks** — drop in 코어 / 램프 / 설비 (core / ramp / mech) obstacle
+  blocks; drag to position them and stalls clear out of the way.
+- **Adjustable rule** — stall width and depth (default 2.5 × 5.0 m) and aisle
+  width (default 6 m).
+- **Stats** — edge, inner, and total stall counts, site area, and parking
+  efficiency, live while editing. State persists to localStorage.
+
 ## Development
 
 ```bash
