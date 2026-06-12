@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTheme } from '../../theme';
 import {
   computeFloors,
   DEFAULT_PARAMS,
@@ -12,6 +13,29 @@ import {
 } from './geometry';
 
 const STORAGE_KEY = 'northlight-state-v1';
+
+/** Canvas colors come from the active theme's CSS variables. */
+interface Palette {
+  strong: string;
+  mid: string;
+  grid: string;
+  card: string;
+  tint: string;
+  accent: string;
+}
+
+function readPalette(): Palette {
+  const s = getComputedStyle(document.documentElement);
+  const v = (name: string) => s.getPropertyValue(name).trim();
+  return {
+    strong: v('--draw-strong'),
+    mid: v('--draw-mid'),
+    grid: v('--draw-grid'),
+    card: v('--t-card'),
+    tint: v('--surface-tint'),
+    accent: v('--t-accent'),
+  };
+}
 
 const DEFAULT_VERTS: Pt[] = [
   { x: 0.0, y: 31.5 },
@@ -64,14 +88,14 @@ function makePlanTransform(verts: Pt[], w: number, h: number): PlanTransform {
   };
 }
 
-function chip(ctx: CanvasRenderingContext2D, text: string, x: number, y: number) {
+function chip(ctx: CanvasRenderingContext2D, pal: Palette, text: string, x: number, y: number) {
   ctx.font = '12px ui-monospace, Menlo, Consolas, monospace';
   const w = ctx.measureText(text).width + 12;
-  ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
+  ctx.fillStyle = pal.card;
   ctx.beginPath();
   ctx.roundRect(x - w / 2, y - 10, w, 20, 4);
   ctx.fill();
-  ctx.fillStyle = '#e8e8e8';
+  ctx.fillStyle = pal.mid;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, x, y + 0.5);
@@ -104,6 +128,7 @@ function strokeDeviatingEdges(
 
 function drawPlan(
   canvas: HTMLCanvasElement,
+  pal: Palette,
   verts: Pt[],
   params: RuleParams,
   floors: Floor[],
@@ -112,7 +137,7 @@ function drawPlan(
   const T = makePlanTransform(verts, w, h);
 
   // grid (5 m)
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.strokeStyle = pal.grid;
   ctx.lineWidth = 1;
   const origin = T.toWorld(0, h);
   const corner = T.toWorld(w, 0);
@@ -139,9 +164,9 @@ function drawPlan(
     else ctx.lineTo(s.x, s.y);
   });
   ctx.closePath();
-  ctx.fillStyle = 'rgba(217, 142, 63, 0.06)';
+  ctx.fillStyle = pal.tint;
   ctx.fill();
-  ctx.strokeStyle = 'rgba(232, 232, 232, 0.85)';
+  ctx.strokeStyle = pal.strong;
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
@@ -154,7 +179,7 @@ function drawPlan(
 
   // base setback line (red dashed) — the line every floor must respect
   const baseFp = footprintAt(verts, params.base);
-  ctx.strokeStyle = '#e05d5d';
+  ctx.strokeStyle = pal.accent;
   ctx.lineWidth = 1.5;
   ctx.setLineDash([6, 5]);
   for (const poly of baseFp.polys) strokeDeviatingEdges(ctx, poly, verts, T);
@@ -165,9 +190,9 @@ function drawPlan(
     const s = T.toScreen(v);
     ctx.beginPath();
     ctx.arc(s.x, s.y, 7, 0, Math.PI * 2);
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = pal.card;
     ctx.fill();
-    ctx.strokeStyle = '#0a0a0a';
+    ctx.strokeStyle = pal.strong;
     ctx.lineWidth = 2;
     ctx.stroke();
   }
@@ -178,7 +203,7 @@ function drawPlan(
     const b = verts[(i + 1) % verts.length];
     const len = Math.hypot(b.x - a.x, b.y - a.y);
     const mid = T.toScreen({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-    chip(ctx, `E${i + 1}: ${len.toFixed(1)}m`, mid.x, mid.y);
+    chip(ctx, pal, `E${i + 1}: ${len.toFixed(1)}m`, mid.x, mid.y);
   }
 
   // site area label
@@ -190,14 +215,14 @@ function drawPlan(
   }
   const c = T.toScreen({ x: cx / verts.length, y: cy / verts.length });
   ctx.font = '700 18px ui-monospace, Menlo, Consolas, monospace';
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = pal.strong;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(`${polyArea(verts).toFixed(1)} m²`, c.x, c.y);
 
   // north arrow
-  ctx.strokeStyle = '#e05d5d';
-  ctx.fillStyle = '#e05d5d';
+  ctx.strokeStyle = pal.accent;
+  ctx.fillStyle = pal.accent;
   ctx.lineWidth = 3;
   const nx = w - 46;
   ctx.beginPath();
@@ -229,12 +254,18 @@ interface IsoLevel {
   dash: boolean;
 }
 
-function drawIso(canvas: HTMLCanvasElement, verts: Pt[], params: RuleParams, floors: Floor[]) {
+function drawIso(
+  canvas: HTMLCanvasElement,
+  pal: Palette,
+  verts: Pt[],
+  params: RuleParams,
+  floors: Floor[],
+) {
   const { ctx, w, h } = setupCanvas(canvas);
 
   const baseFp = footprintAt(verts, params.base);
   const levels: IsoLevel[] = [
-    { z: 0, polys: [verts], color: 'rgba(232,232,232,0.65)', label: 'GL 0m', dash: false },
+    { z: 0, polys: [verts], color: pal.mid, label: 'GL 0m', dash: false },
     ...floors.map((f) => ({
       z: f.topZ,
       polys: f.polys,
@@ -251,7 +282,7 @@ function drawIso(canvas: HTMLCanvasElement, verts: Pt[], params: RuleParams, flo
     levels.push({
       z: params.threshold,
       polys: baseFp.polys,
-      color: '#e05d5d',
+      color: pal.accent,
       label: `사선 ${+params.threshold.toFixed(1)}m`,
       dash: true,
     });
@@ -317,9 +348,10 @@ function drawIso(canvas: HTMLCanvasElement, verts: Pt[], params: RuleParams, flo
 }
 
 const inputCls =
-  'w-20 rounded-md border border-line bg-field px-2 py-1.5 font-mono text-ink focus:border-accent-dim focus:outline-none';
+  'w-20 border border-line bg-field px-2 py-1.5 font-mono text-ink focus:border-accent focus:outline-none';
 
 export default function NorthlightApp() {
+  const { dark } = useTheme();
   const [verts, setVerts] = useState<Pt[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -359,9 +391,11 @@ export default function NorthlightApp() {
   const groundArea = floors.length ? floors[0].area : 0;
 
   const render = useCallback(() => {
-    if (planRef.current) transformRef.current = drawPlan(planRef.current, verts, params, floors);
-    if (isoRef.current) drawIso(isoRef.current, verts, params, floors);
-  }, [verts, params, floors]);
+    const pal = readPalette();
+    if (planRef.current)
+      transformRef.current = drawPlan(planRef.current, pal, verts, params, floors);
+    if (isoRef.current) drawIso(isoRef.current, pal, verts, params, floors);
+  }, [verts, params, floors, dark]);
 
   useEffect(() => {
     render();
@@ -403,18 +437,21 @@ export default function NorthlightApp() {
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-line bg-card">
-      <header className="px-6 pt-5 pb-1.5">
-        <h1 className="m-0 flex flex-wrap items-baseline gap-4">
-          <span className="text-[19px] font-medium tracking-[0.32em] text-[#d4d4d4]">
-            NORTHLIGHT REGULATION
+    <div className="relative border border-line bg-card">
+      <span className="absolute top-6 right-2.5 z-10 text-[10px] tracking-[0.22em] whitespace-nowrap text-faint uppercase [writing-mode:vertical-rl]">
+        건축법 시행령 제86조
+      </span>
+      <header className="px-6 pt-6 pb-2">
+        <h1 className="m-0">
+          <span className="block text-[28px] leading-tight font-semibold tracking-tight">
+            northlight regulation
           </span>
-          <span className="text-sm font-normal text-muted">정북 일조사선</span>
+          <span className="text-[12px] tracking-[0.14em] text-accent">정북 일조사선</span>
         </h1>
       </header>
 
       <div className="grid gap-2.5 px-4 pt-3 pb-1 md:grid-cols-2">
-        <div className="h-[420px] overflow-hidden rounded-lg border border-line bg-field">
+        <div className="h-[420px] overflow-hidden border border-line bg-field">
           <canvas
             ref={planRef}
             className="block h-full w-full cursor-crosshair touch-none"
@@ -467,12 +504,12 @@ export default function NorthlightApp() {
             }}
           />
         </div>
-        <div className="h-[420px] overflow-hidden rounded-lg border border-line bg-field">
+        <div className="h-[420px] overflow-hidden border border-line bg-field">
           <canvas ref={isoRef} className="block h-full w-full" />
         </div>
       </div>
 
-      <p className="mx-6 my-2 text-[13px] tracking-[0.1em] text-muted">
+      <p className="mx-6 my-2 font-mono text-[13px] tracking-[0.1em] text-muted">
         Floors: {floors.length} | H: {+height.toFixed(1)}m | Vol: {Math.round(volume)} m³ | Area:{' '}
         {Math.round(groundArea)} m²
       </p>
@@ -541,7 +578,7 @@ export default function NorthlightApp() {
         <button
           type="button"
           onClick={() => setVerts(DEFAULT_VERTS.map((v) => ({ ...v })))}
-          className="cursor-pointer rounded-md border border-line bg-field px-3 py-1.5 font-mono text-ink hover:border-accent-dim"
+          className="cursor-pointer border border-line bg-field px-3 py-1.5 text-[10.5px] tracking-[0.16em] text-ink uppercase hover:border-ink"
         >
           Reset site
         </button>

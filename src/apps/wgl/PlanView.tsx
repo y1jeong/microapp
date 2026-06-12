@@ -79,7 +79,7 @@ export default function PlanView({ parcels, activeId, gl, selectedId, onSelect, 
     <svg
       ref={svgRef}
       viewBox={`0 0 ${W} ${H}`}
-      className="block h-auto w-full touch-none select-none"
+      className="block h-auto w-full touch-none font-mono select-none"
       onPointerMove={handlePointerMove}
       onPointerUp={() => {
         dragId.current = null;
@@ -95,22 +95,39 @@ export default function PlanView({ parcels, activeId, gl, selectedId, onSelect, 
         .map((p) => {
           const c = centroid(p);
           return (
-            <g key={p.id} opacity={0.45}>
+            <g key={p.id} opacity={0.55}>
               {p.closed ? (
-                <polygon points={path(p)} fill="none" stroke="#555" strokeWidth={1} />
+                <polygon
+                  points={path(p)}
+                  fill="none"
+                  className="stroke-(--draw-faint)"
+                  strokeWidth={1}
+                />
               ) : (
                 <polyline
                   points={path(p)}
                   fill="none"
-                  stroke="#555"
+                  className="stroke-(--draw-faint)"
                   strokeWidth={1}
                   strokeDasharray="3 4"
                 />
               )}
               {p.vertices.map((v) => (
-                <circle key={v.id} cx={px(v.x)} cy={py(v.y)} r={3.5} fill="#555" />
+                <circle
+                  key={v.id}
+                  cx={px(v.x)}
+                  cy={py(v.y)}
+                  r={3.5}
+                  className="fill-(--draw-faint)"
+                />
               ))}
-              <text x={px(c.x)} y={py(c.y)} fill="#666" fontSize={12} textAnchor="middle">
+              <text
+                x={px(c.x)}
+                y={py(c.y)}
+                className="fill-(--draw-faint)"
+                fontSize={12}
+                textAnchor="middle"
+              >
                 {p.name}
               </text>
             </g>
@@ -120,15 +137,14 @@ export default function PlanView({ parcels, activeId, gl, selectedId, onSelect, 
       {active.closed ? (
         <polygon
           points={path(active)}
-          fill="rgba(255,255,255,0.04)"
-          stroke="#cfcfcf"
+          className="fill-(--surface-tint) stroke-(--draw-strong)"
           strokeWidth={1.5}
         />
       ) : (
         <polyline
           points={path(active)}
           fill="none"
-          stroke="#cfcfcf"
+          className="stroke-(--draw-strong)"
           strokeWidth={1.5}
           strokeDasharray="8 4"
         />
@@ -143,11 +159,17 @@ export default function PlanView({ parcels, activeId, gl, selectedId, onSelect, 
             y1={py(s.y1)}
             x2={px(s.x2)}
             y2={py(s.y2)}
-            stroke="#b07a45"
+            className="stroke-(--color-accent-dim)"
             strokeWidth={1.2}
             strokeDasharray="6 5"
           />
-          <text x={px(s.x1) - 6} y={py(s.y1) - 4} fill="#9a6a3c" fontSize={12} textAnchor="end">
+          <text
+            x={px(s.x1) - 6}
+            y={py(s.y1) - 4}
+            className="fill-(--color-accent-dim)"
+            fontSize={12}
+            textAnchor="end"
+          >
             EL+{s.level.toFixed(1)}
           </text>
         </g>
@@ -159,7 +181,7 @@ export default function PlanView({ parcels, activeId, gl, selectedId, onSelect, 
           y1={py(s.y1)}
           x2={px(s.x2)}
           y2={py(s.y2)}
-          stroke="#d98e3f"
+          className="stroke-(--color-accent)"
           strokeWidth={2.5}
           strokeDasharray="9 6"
         />
@@ -170,7 +192,7 @@ export default function PlanView({ parcels, activeId, gl, selectedId, onSelect, 
           key={`e${a.id}`}
           x={px((a.x + b.x) / 2)}
           y={py((a.y + b.y) / 2) - 8}
-          fill="#8a8a8a"
+          className="fill-(--draw-mid)"
           fontSize={14}
           textAnchor="middle"
         >
@@ -182,7 +204,7 @@ export default function PlanView({ parcels, activeId, gl, selectedId, onSelect, 
         <text
           x={px(cx)}
           y={py(cy)}
-          fill="#e0e0e0"
+          className="fill-(--draw-strong)"
           fontSize={26}
           fontWeight={600}
           letterSpacing="0.04em"
@@ -199,6 +221,7 @@ export default function PlanView({ parcels, activeId, gl, selectedId, onSelect, 
         const len = Math.hypot(dx, dy) || 1;
         const lx = px(v.x) + (dx / len) * 26;
         const ly = py(v.y) - (dy / len) * 26;
+        const selected = v.id === selectedId;
         return (
           <g
             key={v.id}
@@ -213,14 +236,26 @@ export default function PlanView({ parcels, activeId, gl, selectedId, onSelect, 
               cx={px(v.x)}
               cy={py(v.y)}
               r={11}
-              fill="#fff"
-              stroke={v.id === selectedId ? '#d98e3f' : 'none'}
-              strokeWidth={3}
+              className={`fill-(--color-card) ${selected ? 'stroke-(--color-accent)' : 'stroke-(--draw-strong)'}`}
+              strokeWidth={selected ? 3 : 1.5}
             />
-            <text x={lx} y={ly - 8} fill="#fff" fontSize={19} fontWeight={700} textAnchor="middle">
+            <text
+              x={lx}
+              y={ly - 8}
+              className="fill-(--draw-strong)"
+              fontSize={19}
+              fontWeight={700}
+              textAnchor="middle"
+            >
               {vertexLabel(i)}
             </text>
-            <text x={lx} y={ly + 10} fill="#cfcfcf" fontSize={15} textAnchor="middle">
+            <text
+              x={lx}
+              y={ly + 10}
+              className="fill-(--draw-mid)"
+              fontSize={15}
+              textAnchor="middle"
+            >
               EL+{v.el.toFixed(2)}
             </text>
           </g>

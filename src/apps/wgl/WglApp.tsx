@@ -72,9 +72,9 @@ function formulaLine(parcel: Parcel, r: WglResult) {
 }
 
 const inputCls =
-  'w-full max-w-24 rounded-md border border-line bg-field px-2 py-1 font-mono text-ink focus:border-accent-dim focus:outline-none';
+  'w-full max-w-24 border border-line bg-field px-2 py-1 font-mono text-ink focus:border-accent focus:outline-none';
 const buttonCls =
-  'cursor-pointer rounded-md border border-line bg-field px-2.5 py-1 font-mono text-ink hover:enabled:border-accent-dim disabled:cursor-default disabled:opacity-35';
+  'cursor-pointer border border-line bg-field px-3 py-1.5 text-[10.5px] tracking-[0.16em] uppercase text-ink hover:enabled:border-ink disabled:cursor-default disabled:opacity-35';
 
 export default function WglApp() {
   const [parcels, setParcels] = useState<Parcel[]>(sampleParcels);
@@ -182,7 +182,7 @@ export default function WglApp() {
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-line bg-card">
+    <div className="relative border border-line bg-card">
       {importState && (
         <ImportDialog
           fileName={importState.fileName}
@@ -192,12 +192,15 @@ export default function WglApp() {
           onCancel={() => setImportState(null)}
         />
       )}
-      <header className="flex flex-wrap items-baseline justify-between gap-3 px-6 pt-5 pb-1.5">
-        <h1 className="m-0 flex flex-wrap items-baseline gap-4">
-          <span className="text-[19px] font-medium tracking-[0.32em] text-[#d4d4d4]">
-            WEIGHTED GROUND LEVEL
+      <span className="absolute top-6 right-2.5 z-10 text-[10px] tracking-[0.22em] whitespace-nowrap text-faint uppercase [writing-mode:vertical-rl]">
+        건축법 시행령 제119조
+      </span>
+      <header className="flex flex-wrap items-baseline justify-between gap-3 px-6 pt-6 pb-2">
+        <h1 className="m-0">
+          <span className="block text-[28px] leading-tight font-semibold tracking-tight">
+            weighted ground level
           </span>
-          <span className="text-sm font-normal text-muted">가중평균 지표면</span>
+          <span className="text-[12px] tracking-[0.14em] text-accent">가중평균 지표면</span>
         </h1>
         <div>
           <input
@@ -231,14 +234,14 @@ export default function WglApp() {
                   setActiveId(p.id);
                   setSelectedId(null);
                 }}
-                className={`cursor-pointer rounded-lg border px-3 py-1.5 text-left text-[12px] ${
+                className={`cursor-pointer border px-3 py-1.5 text-left text-[12px] ${
                   isActive
-                    ? 'border-accent-dim bg-accent/10 text-ink'
-                    : 'border-line bg-field text-muted hover:border-accent-dim'
+                    ? 'border-accent bg-accent/10 text-ink'
+                    : 'border-line bg-field text-muted hover:border-ink'
                 }`}
               >
                 <span className="block">{p.name}</span>
-                <span className={isActive ? 'text-accent' : ''}>
+                <span className={`font-mono ${isActive ? 'text-accent' : ''}`}>
                   {p.kind === 'road' ? '수평면' : 'G.L'} EL+{r.gl.toFixed(2)}
                 </span>
               </button>
@@ -272,7 +275,7 @@ export default function WglApp() {
           SECTION VIEW — {active.name}
         </h2>
         <SectionView parcel={active} result={result} />
-        <p className="mx-2 my-2 text-[12.5px] leading-relaxed text-muted">
+        <p className="mx-2 my-2 font-mono text-[12px] leading-relaxed text-muted">
           {formulaLine(active, result)}
         </p>
       </section>
@@ -292,7 +295,7 @@ export default function WglApp() {
               const kind = e.target.value as Parcel['kind'];
               patchParcel(active.id, { kind, closed: kind !== 'road' });
             }}
-            className="rounded-md border border-line bg-field px-2 py-1 font-mono text-[13px] text-ink focus:border-accent-dim focus:outline-none"
+            className="border border-line bg-field px-2 py-1 text-[12px] text-ink focus:border-accent focus:outline-none"
             aria-label="Parcel kind"
           >
             <option value="site">계획대지 (closed)</option>
