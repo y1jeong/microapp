@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import NorthlightApp from './northlight/NorthlightApp';
+import ParkingApp from './parking/ParkingApp';
 import WglApp from './wgl/WglApp';
 
 export interface MicroApp {
@@ -43,5 +44,21 @@ export const microApps: MicroApp[] = [
       ['rule', 'threshold · base setback · ratio'],
     ],
     component: NorthlightApp,
+  },
+  {
+    id: 'parking',
+    title: 'parking layout',
+    titleKo: '주차 배치',
+    statute: '주차장법 시행규칙 제3조',
+    description:
+      'Auto-fitted parking inside a site polygon — perimeter stalls, inner double-loaded rows, and the circulation aisle between them.',
+    facts: [
+      ['plan', 'site polygon · drag corners · edge lengths'],
+      ['stalls', 'edge rows · inner double rows · 2.5×5.0m'],
+      ['aisle', 'circulation loop · 직각주차 차로 6.0m'],
+      ['blocks', 'core · ramp · mech — 주차 제외 영역'],
+      ['stats', 'stall counts · area · efficiency'],
+    ],
+    component: ParkingApp,
   },
 ];
