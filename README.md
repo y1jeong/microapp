@@ -63,6 +63,18 @@ npm run format   # biome autofix
 npm run build    # type-check + production build to dist/
 ```
 
+## Desktop app (Electron)
+
+```bash
+npm run desktop    # build and open the desktop window directly
+npm run dist:win   # build a Windows portable .exe + installer into release/
+npm run dist:mac   # macOS app
+npm run dist:linux # Linux AppImage
+```
+
+`npm run desktop` needs Node installed; the `dist:*` outputs are standalone —
+double-click, no Node, no browser, no server.
+
 Stack: React 19 · Vite 8 (Rolldown) · TypeScript 6 · Tailwind CSS v4
 (CSS-first `@theme` config) · Vitest 4 · Biome. Views are plain SVG — no
 chart library. The build is fully static (`base: './'`), so `dist/` can be

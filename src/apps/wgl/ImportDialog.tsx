@@ -30,18 +30,19 @@ function Preview({ candidate }: { candidate: BoundaryCandidate }) {
     .map((p) => `${ox + (p.x - minX) * k},${S - (oy + (p.y - minY) * k)}`)
     .join(' ');
   return (
-    <svg
-      viewBox={`0 0 ${S} ${S}`}
-      className="h-11 w-11 shrink-0 rounded-md border border-line bg-field"
-    >
+    <svg viewBox={`0 0 ${S} ${S}`} className="h-11 w-11 shrink-0 border border-line bg-field">
       <title>{candidate.layer || 'boundary'} preview</title>
       {candidate.closed ? (
-        <polygon points={pts} fill="rgba(217,142,63,0.12)" stroke="#cfcfcf" strokeWidth={1.2} />
+        <polygon
+          points={pts}
+          className="fill-(--surface-tint) stroke-(--draw-strong)"
+          strokeWidth={1.2}
+        />
       ) : (
         <polyline
           points={pts}
           fill="none"
-          stroke="#cfcfcf"
+          className="stroke-(--draw-strong)"
           strokeWidth={1.2}
           strokeDasharray="3 2"
         />
@@ -70,7 +71,7 @@ export default function ImportDialog({ fileName, candidates, scale, onConfirm, o
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-line bg-card">
+      <div className="flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden border border-line bg-card">
         <header className="border-b border-line px-5 py-3">
           <h2 className="text-[14px] font-medium tracking-[0.18em] text-ink">IMPORT FROM DXF</h2>
           <p className="mt-1 text-[12px] text-muted">
@@ -85,8 +86,8 @@ export default function ImportDialog({ fileName, candidates, scale, onConfirm, o
             return (
               <div
                 key={c.key}
-                className={`mb-1.5 flex items-center gap-3 rounded-lg border p-2 ${
-                  picked ? 'border-accent-dim bg-accent/10' : 'border-line bg-field'
+                className={`mb-1.5 flex items-center gap-3 border p-2 ${
+                  picked ? 'border-accent bg-accent/10' : 'border-line bg-field'
                 }`}
               >
                 <input
@@ -120,7 +121,7 @@ export default function ImportDialog({ fileName, candidates, scale, onConfirm, o
                   <select
                     value={picked}
                     onChange={(e) => setKind(c.key, e.target.value as ParcelKind)}
-                    className="rounded-md border border-line bg-field px-1.5 py-1 font-mono text-[12px] text-ink focus:border-accent-dim focus:outline-none"
+                    className="border border-line bg-field px-1.5 py-1 text-[12px] text-ink focus:border-accent focus:outline-none"
                     aria-label="Parcel kind"
                   >
                     <option value="site">계획대지</option>
@@ -147,7 +148,7 @@ export default function ImportDialog({ fileName, candidates, scale, onConfirm, o
             <button
               type="button"
               onClick={onCancel}
-              className="cursor-pointer rounded-md border border-line bg-field px-3 py-1.5 font-mono text-[13px] text-ink hover:border-accent-dim"
+              className="cursor-pointer border border-line bg-field px-3 py-1.5 text-[10.5px] tracking-[0.16em] text-ink uppercase hover:border-ink"
             >
               Cancel
             </button>
@@ -165,7 +166,7 @@ export default function ImportDialog({ fileName, candidates, scale, onConfirm, o
                   keepExisting,
                 )
               }
-              className="cursor-pointer rounded-md border border-accent-dim bg-accent/15 px-3 py-1.5 font-mono text-[13px] text-accent hover:enabled:bg-accent/25 disabled:cursor-default disabled:opacity-35"
+              className="cursor-pointer border border-accent bg-accent/15 px-3 py-1.5 text-[10.5px] tracking-[0.16em] text-accent uppercase hover:enabled:bg-accent/25 disabled:cursor-default disabled:opacity-35"
             >
               Import {picks.size > 0 ? `(${picks.size})` : ''}
             </button>

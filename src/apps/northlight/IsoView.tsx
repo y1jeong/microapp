@@ -29,7 +29,7 @@ const PAD_Y = 46;
 
 export default function IsoView({ verts, floors, baseFootprint, rule }: Props) {
   const levels: Level[] = [
-    { z: 0, polys: [verts], color: 'rgba(232,234,237,0.65)', label: 'GL 0m', dash: false },
+    { z: 0, polys: [verts], color: 'var(--draw-mid)', label: 'GL 0m', dash: false },
     ...floors.map((f) => ({
       z: f.topZ,
       polys: f.polys,
@@ -46,7 +46,7 @@ export default function IsoView({ verts, floors, baseFootprint, rule }: Props) {
     levels.push({
       z: rule.threshold,
       polys: baseFootprint.polys,
-      color: '#e05d5d',
+      color: 'var(--t-accent)',
       label: `사선 ${+rule.threshold.toFixed(1)}m`,
       dash: true,
     });
@@ -81,7 +81,7 @@ export default function IsoView({ verts, floors, baseFootprint, rule }: Props) {
   };
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full select-none">
+    <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full font-mono select-none">
       <title>Isometric stack of buildable floor plates</title>
       {levels.map((lv) => {
         let rightmost: Pt | null = null;
@@ -96,7 +96,7 @@ export default function IsoView({ verts, floors, baseFootprint, rule }: Props) {
               key={pts[0]}
               points={pts.join(' ')}
               fill="none"
-              stroke={lv.color}
+              style={{ stroke: lv.color }}
               strokeWidth={lv.dash ? 1.5 : 1.75}
               strokeDasharray={lv.dash ? '6 5' : undefined}
             />
@@ -107,7 +107,7 @@ export default function IsoView({ verts, floors, baseFootprint, rule }: Props) {
           <g key={`${lv.z}:${lv.label ?? 'level'}`}>
             {plates}
             {anchor && lv.label && (
-              <text x={anchor.x + 10} y={anchor.y + 4} fill={lv.color} fontSize={13}>
+              <text x={anchor.x + 10} y={anchor.y + 4} style={{ fill: lv.color }} fontSize={13}>
                 –{lv.label}
               </text>
             )}

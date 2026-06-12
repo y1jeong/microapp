@@ -34,9 +34,9 @@ function loadSaved(): Saved | null {
 }
 
 const inputCls =
-  'w-16 rounded-md border border-line bg-field px-2 py-1 font-mono text-ink focus:border-accent-dim focus:outline-none';
+  'w-16 border border-line bg-field px-2 py-1 font-mono text-ink focus:border-accent focus:outline-none';
 const buttonCls =
-  'cursor-pointer rounded-md border border-line bg-field px-2.5 py-1 font-mono text-ink hover:border-accent-dim';
+  'cursor-pointer border border-line bg-field px-3 py-1.5 text-[10.5px] tracking-[0.16em] uppercase text-ink hover:border-ink';
 
 export default function NorthlightApp() {
   const saved = useMemo(loadSaved, []);
@@ -72,18 +72,21 @@ export default function NorthlightApp() {
     };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-line bg-card">
-      <header className="flex flex-wrap items-baseline justify-between gap-3 px-6 pt-5 pb-1.5">
-        <h1 className="m-0 flex flex-wrap items-baseline gap-4">
-          <span className="text-[19px] font-medium tracking-[0.32em] text-[#d4d4d4]">
-            NORTHLIGHT REGULATION
+    <div className="relative border border-line bg-card">
+      <span className="absolute top-6 right-2.5 z-10 text-[10px] tracking-[0.22em] whitespace-nowrap text-faint uppercase [writing-mode:vertical-rl]">
+        건축법 시행령 제86조
+      </span>
+      <header className="px-6 pt-6 pb-2">
+        <h1 className="m-0">
+          <span className="block text-[28px] leading-tight font-semibold tracking-tight">
+            northlight regulation
           </span>
-          <span className="text-sm font-normal text-muted">정북 일조사선</span>
+          <span className="text-[12px] tracking-[0.14em] text-accent">정북 일조사선</span>
         </h1>
       </header>
 
       <div className="grid gap-2 px-3 pt-2 md:grid-cols-2">
-        <div className="rounded-xl border border-line bg-field/60">
+        <div className="border border-line bg-field/60">
           <PlanView
             verts={verts}
             floors={floors}
@@ -93,12 +96,12 @@ export default function NorthlightApp() {
             onRemove={(i) => setVerts((vs) => (vs.length > 3 ? vs.filter((_, j) => j !== i) : vs))}
           />
         </div>
-        <div className="rounded-xl border border-line bg-field/60">
+        <div className="border border-line bg-field/60">
           <IsoView verts={verts} floors={floors} baseFootprint={baseFootprint} rule={rule} />
         </div>
       </div>
 
-      <p className="px-6 pt-4 pb-1 text-[15px] tracking-[0.1em] text-muted">
+      <p className="px-6 pt-4 pb-1 font-mono text-[14px] tracking-[0.1em] text-muted">
         Floors: {floors.length} | H: {+(floors.length * floorH).toFixed(1)}m | Vol:{' '}
         {Math.round(volume)} m³ | Area: {Math.round(groundArea)} m²
       </p>

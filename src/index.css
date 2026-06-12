@@ -1,18 +1,67 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Runtime-switchable design tokens. Utilities reference these through
+ * @theme inline, so toggling the .dark class restyles everything,
+ * including SVG fills/strokes that point at the --draw-* palette.
+ */
+:root {
+  --t-bg: #e4e5e9;
+  --t-card: #fbfbfc;
+  --t-field: #f1f1f4;
+  --t-line: #d4d6db;
+  --t-ink: #1a1b1e;
+  --t-muted: #797d86;
+  --t-faint: #a4a7af;
+  --t-accent: #e2574c;
+  --t-accent-dim: #c2766b;
+
+  --draw-strong: #232529;
+  --draw-mid: #71747c;
+  --draw-faint: #abaeb5;
+  --draw-grid: rgba(0, 0, 0, 0.06);
+  --surface-tint: rgba(0, 0, 0, 0.03);
+  --hatch: rgba(0, 0, 0, 0.14);
+}
+
+.dark {
+  --t-bg: #0a0a0b;
+  --t-card: #141415;
+  --t-field: #0d0d0e;
+  --t-line: #2c2c30;
+  --t-ink: #e8e8e8;
+  --t-muted: #8a8e96;
+  --t-faint: #6f7278;
+  --t-accent: #e2574c;
+  --t-accent-dim: #a8665f;
+
+  --draw-strong: #ececec;
+  --draw-mid: #9a9da4;
+  --draw-faint: #5f6166;
+  --draw-grid: rgba(255, 255, 255, 0.06);
+  --surface-tint: rgba(255, 255, 255, 0.04);
+  --hatch: rgba(255, 255, 255, 0.14);
+}
+
+@theme inline {
+  --color-bg: var(--t-bg);
+  --color-card: var(--t-card);
+  --color-field: var(--t-field);
+  --color-line: var(--t-line);
+  --color-ink: var(--t-ink);
+  --color-muted: var(--t-muted);
+  --color-faint: var(--t-faint);
+  --color-accent: var(--t-accent);
+  --color-accent-dim: var(--t-accent-dim);
+}
+
 @theme {
+  --font-sans: "Helvetica Neue", "Inter", "Pretendard", system-ui, -apple-system, Arial, sans-serif;
   --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
-  --color-bg: #0a0a0a;
-  --color-card: #141414;
-  --color-field: #0d0d0d;
-  --color-line: #2e2e2e;
-  --color-ink: #e8e8e8;
-  --color-muted: #8a8a8a;
-  --color-faint: #6f6f6f;
-  --color-accent: #d98e3f;
-  --color-accent-dim: #9a6a3c;
 }
 
 body {
-  @apply bg-bg text-ink font-mono antialiased;
+  @apply bg-bg text-ink font-sans antialiased;
 }

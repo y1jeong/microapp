@@ -88,7 +88,7 @@ export default function PlanView({
         y1={0}
         x2={px(gx)}
         y2={H}
-        stroke="rgba(255,255,255,0.05)"
+        className="stroke-(--draw-grid)"
       />,
     );
   }
@@ -100,7 +100,7 @@ export default function PlanView({
         y1={py(gy)}
         x2={W}
         y2={py(gy)}
-        stroke="rgba(255,255,255,0.05)"
+        className="stroke-(--draw-grid)"
       />,
     );
   }
@@ -114,7 +114,7 @@ export default function PlanView({
     <svg
       ref={svgRef}
       viewBox={`0 0 ${W} ${H}`}
-      className="block h-auto w-full touch-none select-none"
+      className="block h-auto w-full touch-none font-mono select-none"
       onPointerMove={handlePointerMove}
       onPointerUp={() => {
         dragIdx.current = null;
@@ -128,7 +128,11 @@ export default function PlanView({
 
       {gridLines}
 
-      <polygon points={sitePath} fill="rgba(80,130,190,0.08)" stroke="#d4d4d4" strokeWidth={1.5} />
+      <polygon
+        points={sitePath}
+        className="fill-(--surface-tint) stroke-(--draw-strong)"
+        strokeWidth={1.5}
+      />
 
       {floors.map((f) =>
         f.polys.flatMap((poly) =>
@@ -154,7 +158,7 @@ export default function PlanView({
             y1={py(a.y)}
             x2={px(b.x)}
             y2={py(b.y)}
-            stroke="#e05d5d"
+            className="stroke-(--color-accent)"
             strokeWidth={1.5}
             strokeDasharray="6 5"
           />
@@ -174,7 +178,7 @@ export default function PlanView({
             key={`e${edgeKey(a, b)}`}
             x={px(mx) + (dx / len) * 26}
             y={py(my) - (dy / len) * 26}
-            fill="#8a8a8a"
+            className="fill-(--draw-mid)"
             fontSize={13}
             textAnchor="middle"
           >
@@ -186,7 +190,7 @@ export default function PlanView({
       <text
         x={px(cx)}
         y={py(cy)}
-        fill="#e0e0e0"
+        className="fill-(--draw-strong)"
         fontSize={22}
         fontWeight={600}
         letterSpacing="0.04em"
@@ -202,10 +206,8 @@ export default function PlanView({
           cx={px(v.x)}
           cy={py(v.y)}
           r={7}
-          fill="#fff"
-          stroke="#0a0a0a"
           strokeWidth={2}
-          className="cursor-grab"
+          className="cursor-grab fill-(--color-card) stroke-(--draw-strong)"
           onPointerDown={(e) => {
             if (e.altKey) {
               onRemove(i);
@@ -216,7 +218,7 @@ export default function PlanView({
         />
       ))}
 
-      <g stroke="#e05d5d" fill="#e05d5d">
+      <g className="fill-(--color-accent) stroke-(--color-accent)">
         <line x1={W - 40} y1={88} x2={W - 40} y2={44} strokeWidth={3} />
         <path d={`M ${W - 40} 30 l -9 18 h 18 z`} stroke="none" />
         <text x={W - 40} y={112} fontSize={16} fontWeight={700} textAnchor="middle" stroke="none">
