@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-      # temporary, so the app is testable before the first merge to main:
-      - claude/architecture-micro-apps-domzob
   workflow_dispatch:
 
 permissions:
