@@ -1,61 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Northlight Regulation — 정북 일조사선</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <main class="app">
-    <section class="card">
-      <header class="card-header">
-        <h1>NORTHLIGHT REGULATION <span class="sub">정북 일조사선</span></h1>
-      </header>
-
-      <div class="panels">
-        <div class="panel plan-panel">
-          <canvas id="plan-canvas"></canvas>
-        </div>
-        <div class="panel iso-panel">
-          <canvas id="iso-canvas"></canvas>
-        </div>
-      </div>
-
-      <footer class="stats" id="stats">
-        Floors: – | H: – | Vol: – | Area: –
-      </footer>
-    </section>
-
-    <section class="card controls">
-      <label>
-        Floors
-        <input type="number" id="in-floors" min="1" max="60" step="1" value="10" />
-      </label>
-      <label>
-        Floor&nbsp;H&nbsp;(m)
-        <input type="number" id="in-floorh" min="2" max="6" step="0.1" value="3" />
-      </label>
-      <label>
-        사선&nbsp;기준&nbsp;(m)
-        <input type="number" id="in-threshold" min="0" max="20" step="0.5" value="9" />
-      </label>
-      <label>
-        기준이하&nbsp;이격&nbsp;(m)
-        <input type="number" id="in-base" min="0" max="10" step="0.1" value="1.5" />
-      </label>
-      <label>
-        초과부&nbsp;비율
-        <input type="number" id="in-ratio" min="0" max="2" step="0.05" value="0.5" />
-      </label>
-      <button id="btn-reset" type="button">Reset site</button>
-      <p class="hint">
-        Drag vertices · double-click an edge to add a point · Alt-click a vertex to delete ·
-        North is up — h ≤ 기준: 1.5&nbsp;m setback, h &gt; 기준: h × 비율 from the north boundary.
-      </p>
-    </section>
-  </main>
-
-  <script src="app.js"></script>
-</body>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#0d0d0d" />
+    <title>Arch Micro Apps</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

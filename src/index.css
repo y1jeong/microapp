@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --color-bg: #0a0a0a;
+  --color-card: #141414;
+  --color-field: #0d0d0d;
+  --color-line: #2e2e2e;
+  --color-ink: #e8e8e8;
+  --color-muted: #8a8a8a;
+  --color-faint: #6f6f6f;
+  --color-accent: #d98e3f;
+  --color-accent-dim: #9a6a3c;
+}
+
+body {
+  @apply bg-bg text-ink font-mono antialiased;
+}

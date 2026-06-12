@@ -1,41 +1,54 @@
-# microapp — Northlight Regulation (정북 일조사선)
+# Arch Micro Apps
 
-An interactive visualizer for the Korean north-side daylight setback regulation
-(정북방향 일조권 사선제한, 건축법 시행령 제86조). It shows how the buildable
-envelope of a site shrinks floor by floor under the slope plane.
+작고 집중된 건축 계산 도구 모음 — a collection of small, focused web calculators
+for architects. One hub page, one route per tool.
 
-## Run
+## Micro apps
 
-No build step, no dependencies — open `index.html` in a browser, or serve the
-folder statically:
+### Weighted Ground Level · 가중평균 지표면 (`#/wgl`)
 
-```sh
-npx http-server .
+When a building sits on sloped ground, 건축법 시행령 제119조 defines the design
+ground level as the weighted average of ground elevations along the building
+perimeter. The tool unfolds the perimeter into a section and computes:
+
+```
+WGL = h_min + (area between ground profile and h_min) / perimeter
 ```
 
-## Features
+- **Multiple parcels** — 계획대지, 인접대지, 도로 in one project, each with its
+  own weighted average (G.L±0 = 최저레벨 + 면적÷접하는 길이).
+- **도로 가중평균 수평면** — road frontages are open polylines averaged over
+  the contact length instead of a closed perimeter.
+- **Plan view** — drag corners to reshape the active parcel; other parcels stay
+  dimmed in context. Edge lengths, plan area, and EL contours update live.
+- **Section view** — the unfolded profile with a dimension band (numbered
+  points + segment lengths, like the survey drawing), EL labels, and the
+  G.L±0 line over the weighted-area hatch.
+- **DXF import** — built for full 배치도 site plans: parses LWPOLYLINE/POLYLINE
+  boundaries and chains loose LINE work into loops, filters out annotation
+  noise, then shows a picker (with previews, layers, and sizes) to choose
+  which boundaries are 대지/인접대지/도로. Units mm→m auto-detected; nearby
+  `EL+xx.xx` TEXT labels become vertex elevations.
+- **Vertex table** — edit X/Y/EL numerically, insert or delete corners.
 
-- **Plan view** — editable site polygon (drag the white vertices, double-click
-  an edge to add a point, Alt-click a vertex to delete one), edge lengths,
-  site area, 5 m grid, north arrow. Colored lines show each floor's setback
-  boundary; the red dashed line is the base (1.5 m) setback.
-- **Isometric view** — stacked floor plates colored from blue (low) to green
-  (high), with per-floor height labels and the 사선 threshold marked in red.
-- **Stats** — buildable floors, total height, volume, and ground-floor area.
-- **Adjustable rule parameters** — floor count, floor height, slope threshold
-  (default 9 m), base setback (default 1.5 m), and the above-threshold ratio
-  (default h × 1/2).
+## Development
 
-## Rule model
+```bash
+npm install
+npm run dev      # local dev server
+npm test         # geometry unit tests (vitest)
+npm run lint     # biome lint + format check
+npm run format   # biome autofix
+npm run build    # type-check + production build to dist/
+```
 
-A point is buildable at height *h* if its due-north distance to the site
-boundary is at least:
+Stack: React 19 · Vite 8 (Rolldown) · TypeScript 6 · Tailwind CSS v4
+(CSS-first `@theme` config) · Vitest 4 · Biome. Views are plain SVG — no
+chart library. The build is fully static (`base: './'`), so `dist/` can be
+hosted anywhere — GitHub Pages, Vercel, Netlify, or a plain file server.
 
-- *h* ≤ threshold → base setback (1.5 m)
-- *h* > threshold → max(base, *h* × ratio)
+## Adding a micro app
 
-The footprint of each floor is evaluated at the floor's top height. State is
-persisted to `localStorage`.
-
-> Note: this is a study/visualization tool, not a code-compliance check —
-> adjacent roads, 공동주택 채광 규정, district plans, etc. are out of scope.
+1. Create `src/apps/<id>/` with your app component.
+2. Register it in `src/apps/registry.ts` — it appears on the hub and gets the
+   `#/<id>` route automatically.
