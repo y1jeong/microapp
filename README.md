@@ -31,6 +31,27 @@ WGL = h_min + (area between ground profile and h_min) / perimeter
   `EL+xx.xx` TEXT labels become vertex elevations.
 - **Vertex table** — edit X/Y/EL numerically, insert or delete corners.
 
+### Northlight Regulation · 정북 일조사선 (`#/northlight`)
+
+In residential zones, 건축법 시행령 제86조 caps building height near the north
+property line: parts up to the threshold height must keep the base setback
+(1.5 m), and parts above it must keep at least their own height × ratio
+(default h/2) from the north boundary. The tool shows the buildable envelope
+floor by floor:
+
+- **Plan view** — editable site polygon (drag vertices, double-click an edge
+  to add a point, Alt-click to delete) with edge lengths, site area, a 5 m
+  grid, and the north arrow. Colored lines mark each floor's setback boundary;
+  the red dashed line is the base setback.
+- **Isometric view** — stacked floor plates colored blue (low) → green (high)
+  with per-floor height labels and the 사선 threshold plane dashed in red.
+  Notched sites clip per part, so wings under the slope plane drop out while
+  taller parts keep shrinking.
+- **Stats** — buildable floors, total height, volume, and ground-floor area,
+  live while editing.
+- **Adjustable rule** — floor count and height, slope threshold (default 9 m;
+  current law uses 10 m), base setback, and above-threshold ratio.
+
 ## Development
 
 ```bash
