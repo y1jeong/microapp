@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import NorthlightApp from './northlight/NorthlightApp';
 import WglApp from './wgl/WglApp';
 
 export interface MicroApp {
@@ -17,5 +18,13 @@ export const microApps: MicroApp[] = [
     description:
       'Average ground level along a building perimeter on sloped ground — plan + unfolded section, per 건축법 시행령 제119조.',
     component: WglApp,
+  },
+  {
+    id: 'northlight',
+    title: 'Northlight Regulation',
+    titleKo: '정북 일조사선',
+    description:
+      'Buildable envelope under the north-side daylight setback — editable site plan with per-floor setback lines + isometric floor stack, per 건축법 시행령 제86조.',
+    component: NorthlightApp,
   },
 ];
