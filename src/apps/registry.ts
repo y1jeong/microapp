@@ -7,10 +7,14 @@ export interface MicroApp {
   id: string;
   title: string;
   titleKo: string;
+  /** grouping bucket shown as a section on the hub (usually the law domain) */
+  category: string;
   /** statute reference shown as vertical edge text, editorial style */
   statute: string;
   description: string;
   facts: [string, string][];
+  /** extra search terms (synonyms, en/ko) not already in the visible copy */
+  keywords?: string[];
   component: ComponentType;
 }
 
@@ -19,6 +23,7 @@ export const microApps: MicroApp[] = [
     id: 'wgl',
     title: 'weighted ground level',
     titleKo: '가중평균 지표면',
+    category: '건축법',
     statute: '건축법 시행령 제119조',
     description:
       'Average ground level along a building perimeter on sloped ground — plan and unfolded section, computed per parcel.',
@@ -28,12 +33,24 @@ export const microApps: MicroApp[] = [
       ['road', '도로 가중평균 수평면 · open trace'],
       ['import', 'DXF site plan · boundary picker'],
     ],
+    keywords: [
+      'ground',
+      'level',
+      'elevation',
+      'grade',
+      'section',
+      'dxf',
+      '지표면',
+      '레벨',
+      '가중평균',
+    ],
     component: WglApp,
   },
   {
     id: 'northlight',
     title: 'northlight regulation',
     titleKo: '정북 일조사선',
+    category: '건축법',
     statute: '건축법 시행령 제86조',
     description:
       'How the buildable envelope shrinks floor by floor under the north-side daylight slope plane.',
@@ -43,12 +60,24 @@ export const microApps: MicroApp[] = [
       ['stats', 'floors · height · volume · area'],
       ['rule', 'threshold · base setback · ratio'],
     ],
+    keywords: [
+      'daylight',
+      'sunlight',
+      'setback',
+      'envelope',
+      'height',
+      '일조',
+      '사선',
+      '정북',
+      '높이',
+    ],
     component: NorthlightApp,
   },
   {
     id: 'parking',
     title: 'parking layout',
     titleKo: '주차 배치',
+    category: '주차장법',
     statute: '주차장법 시행규칙 제3조',
     description:
       'Auto-fitted parking inside a site polygon — perimeter stalls, inner double-loaded rows, and the circulation aisle between them.',
@@ -59,6 +88,7 @@ export const microApps: MicroApp[] = [
       ['blocks', 'core · ramp · mech — 주차 제외 영역'],
       ['stats', 'stall counts · area · efficiency'],
     ],
+    keywords: ['parking', 'stall', 'stalls', 'aisle', 'lot', 'cars', '주차', '주차장', '배치'],
     component: ParkingApp,
   },
 ];
