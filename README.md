@@ -3,6 +3,11 @@
 작고 집중된 건축 계산 도구 모음 — a collection of small, focused web calculators
 for architects. One hub page, one route per tool.
 
+The hub is built to scale to many tools: a live **search** box filters by name
+(en/ko), 법규, or keyword; apps are grouped into **categories**; and a global
+**command palette** (`⌘K` / `Ctrl+K`) jumps to any app from anywhere, including
+from inside another app — arrow keys to move, `↵` to open, `esc` to close.
+
 ## Micro apps
 
 ### Weighted Ground Level · 가중평균 지표면 (`#/wgl`)
@@ -104,4 +109,10 @@ hosted anywhere — GitHub Pages, Vercel, Netlify, or a plain file server.
 
 1. Create `src/apps/<id>/` with your app component.
 2. Register it in `src/apps/registry.ts` — it appears on the hub and gets the
-   `#/<id>` route automatically.
+   `#/<id>` route automatically. Each entry needs:
+   - `category` — the hub section it groups under (e.g. `건축법`, `주차장법`).
+   - `keywords` *(optional)* — extra search terms (synonyms, en/ko) so it's
+     findable from the search box and `⌘K` palette even by words not in its copy.
+
+Search ranking and category grouping live in `src/apps/search.ts` (unit-tested
+in `search.test.ts`).
